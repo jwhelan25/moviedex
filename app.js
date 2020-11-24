@@ -16,12 +16,10 @@ app.use(helmet())
 
 function validateBearerToken(req, res, next){
     const authKey = req.get('Authorization')
-    if(!authKey || authKey.split(' ')[0] !== 'Bearer'){
-        return res.status(400).json('error: Bearer Token Needed')
-    } else if (authKey !== API_KEY){
-        return res.status(401).json('error: Access Denied')
-    }
-    next()
+    if (!authKey || authKey.split(' ')[1] !== API_KEY) {
+        return res.status(401).json({ error: 'Unauthorized request' })
+      }
+      next()
 }
 
 app.use(validateBearerToken)
@@ -30,8 +28,24 @@ function handleGetMovie (req, res){
     let retu = [...movieList]
     const {genre, country, avg_vote} = req.query
 
-    res
-    .json(retu)
+    if (genre) {
+        retu = retu.filter(movie =>
+          movie.genre.toLowerCase().includes(req.query.genre.toLowerCase())
+        )
+      }
+    
+      if (country) {
+        retu = retu.filter(movie =>
+          movie.country.toLowerCase().includes(country.toLowerCase())
+        )
+      }
+    
+      if (avg_vote) {
+        retu = retu.filter(movie =>
+          Number(movie.avg_vote) >= Number(avg_vote)
+        )
+      }
+    res.json(retu)
 }
 
 app.get('/movie', handleGetMovie)
